@@ -1,0 +1,52 @@
+plugins {
+    id 'java-platform'// this defines it as Bill Of Materials file.
+    id 'maven-publish'// Since we gonna publish to jfrog
+    id 'com.jfrog.artifactory' version '5.2.5'
+}
+
+group = 'org.example.demobom'
+version = '1.0.1'
+
+repositories {
+    mavenCentral()
+}
+
+javaPlatform{
+    allowDependencies() //Allow importing this in other subprojects
+}
+
+dependencies {
+    constraints {
+        api "org.springframework.boot:spring-boot-starter:3.1.0"
+        api "com.google.code.gson:gson:2.11.1"
+        api "org.apache.commons:commons-lang3:3.12.0"
+        api "org.junit.jupiter:junit-jupiter:5.9.1"
+        api "org.projectlombok:lombok:1.18.28"
+    }
+}
+
+publishing {
+    publications {
+        mavenJava(MavenPublication) {
+            from components.javaPlatform // ✅ FIXED: Use javaPlatform instead of java
+            groupId = 'org.example.demobom' // ✅ FIXED: Use the correct group ID
+            artifactId = 'demobom' // ✅ FIXED: Correct artifact name
+            version = '1.0.1'
+        }
+    }
+}
+
+artifactory {
+    contextUrl = "https://trialee073r.jfrog.io/artifactory"  // Base Artifactory URL
+
+    publish {
+        repository {
+            repoKey = 'gradledemonew-gradle-dev-local' // ✅ Artifactory repository
+            username = project.findProperty('artifactoryUserName') ?: System.getenv('ARTIFACTORY_USERNAME')
+            password = project.findProperty('artifactoryPassword') ?: System.getenv('ARTIFACTORY_PASSWORD')
+        }
+        defaults {
+            publications('mavenJava') // ✅ Correctly reference Maven publication
+        }
+    }
+}
